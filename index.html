@@ -127,9 +127,202 @@
     <div id="blocker">¡Termina todos los mensajes primero!</div>
     <img id="killkiwi" src="killkiwi.png" alt="KillKiWi">
 
+   
     <script>
-        // Todo el JavaScript se mantiene igual
-        // [Aquí va todo tu código JavaScript original]
+        // Bloqueo total del dispositivo
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+        
+        document.addEventListener('keydown', function(e) {
+            if ([37, 38, 39, 40, 32].includes(e.keyCode)) { // Flechas y espacio
+                e.preventDefault();
+            }
+        });
+        
+        // Mensajes para primera visita
+        const mensajesPrimeraVez = [
+            "JAJAJA Eres una maruja",
+            "No aguantas la curiosidad? El morbo?",
+            "Te gusta hacer scroll infinito?",
+            "Eeehh estoy hablando, no intentes callarme",
+            "Tu premio por cotilla soy yo: KillKiWi",
+            "Un diablillo amarillo, 100% absurdo, 200% viral",
+            "Usame",
+            "Usame para cambiar tu vida",
+            "Perdemos horas de nuestra vida en paridas virales que luego pasan de moda y olvidamos",
+            "Yo soy otra mas... sencilla, facil y adictiva..",
+            "Pero con una sola diferencia",
+            "Que puedo cambiar tu vida a corto plazo",
+            "Oyeeeee que dejes de intentar pasar de miiii",
+            "Ya llevamos rato hablando, ya nos conocemooss",
+            "Hemos creado un vinculoo",
+            "Esto ya se considera ghosting.. y esta feo",
+            "Mira haz lo que quieras.. yo ya te he avisado",
+            "Las descargas son limitadas",
+            "Luego no quiero lloros cuando tu amigo se compre la moto de sus sueños gracias a mi",
+            "Tu veras..",
+            "Ni te acuerdas de mi nombre",
+            "Que triste...",
+            "Has perdido la oportunidad por no estar atento😂"
+        ];
+
+        // Mensajes para visitas repetidas
+        const mensajesRepetidos = [
+            "Otra vez tuu? 😈",
+            "Te arrepientes de haber pasado de mi?",
+            "Me llamo KillKiWi",
+            "Pesadooo",
+            "Busca mi app",
+            "Tampoco te voy a dar todo masticado..."
+        ];
+
+        // Verificar si es la primera visita
+        if (!localStorage.getItem('visited')) {
+            localStorage.setItem('visited', 'true');
+            var mensajes = mensajesPrimeraVez;
+        } else {
+            var mensajes = mensajesRepetidos;
+        }
+
+        let contador = 0;
+        let popupAbierto = false;
+        const killkiwi = document.getElementById('killkiwi');
+        const blocker = document.getElementById('blocker');
+        let movimientoInterval = null;
+        let nerviosismo = 0;
+
+        // Bloquear gestos táctiles
+        document.addEventListener('touchmove', function(e) {
+            if (!e.target.classList.contains('bocadillo') && !e.target.closest('.bocadillo')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // Bloquear salida
+        window.onbeforeunload = function(e) {
+            if (contador < mensajes.length) {
+                e.preventDefault();
+                e.returnValue = '';
+                blocker.style.display = 'flex';
+                setTimeout(() => blocker.style.display = 'none', 2000);
+                return "¡Debes terminar todos los mensajes primero!";
+            }
+        };
+
+        // Posiciones posibles para los bocadillos
+        const posicionesBocadillo = [
+            { justify: "flex-start", align: "flex-start" },
+            { justify: "flex-end", align: "flex-start" },
+            { justify: "center", align: "flex-start" },
+            { justify: "flex-start", align: "center" },
+            { justify: "flex-end", align: "center" },
+            { justify: "flex-start", align: "flex-end" },
+            { justify: "flex-end", align: "flex-end" },
+            { justify: "center", align: "flex-end" }
+        ];
+
+        function rebotarPorPantalla() {
+            clearInterval(movimientoInterval);
+            
+            const velocidad = Math.max(30, 200 - (nerviosismo * 20));
+            const escalaMin = 0.8 - (nerviosismo * 0.03);
+            const escalaMax = 1.5 + (nerviosismo * 0.15);
+            
+            let posX = parseFloat(killkiwi.style.left) || window.innerWidth/2;
+            let posY = parseFloat(killkiwi.style.top) || window.innerHeight/2;
+            let velX = (Math.random() - 0.5) * (25 + nerviosismo * 6);
+            let velY = (Math.random() - 0.5) * (25 + nerviosismo * 6);
+            
+            movimientoInterval = setInterval(() => {
+                posX += velX;
+                posY += velY;
+                
+                if (posX < 0 || posX > window.innerWidth - 300) {
+                    velX *= -1;
+                    posX = Math.max(0, Math.min(posX, window.innerWidth - 300));
+                }
+                if (posY < 0 || posY > window.innerHeight - 300) {
+                    velY *= -1;
+                    posY = Math.max(0, Math.min(posY, window.innerHeight - 300));
+                }
+                
+                const escala = escalaMin + Math.random() * (escalaMax - escalaMin);
+                const rotacion = (Math.random() - 0.5) * 45;
+                
+                killkiwi.style.left = `${posX}px`;
+                killkiwi.style.top = `${posY}px`;
+                killkiwi.style.transform = `rotate(${rotacion}deg) scale(${escala})`;
+            }, velocidad);
+        }
+
+        function mostrarPopup() {
+            if (contador < mensajes.length && !popupAbierto) {
+                popupAbierto = true;
+                nerviosismo = contador * 0.8;
+                
+                const dialogo = document.createElement('div');
+                dialogo.className = 'dialogo';
+                
+                const posicion = posicionesBocadillo[contador % posicionesBocadillo.length];
+                dialogo.style.justifyContent = posicion.justify;
+                dialogo.style.alignItems = posicion.align;
+                
+                const bocadillo = document.createElement('div');
+                bocadillo.className = 'bocadillo';
+                bocadillo.innerHTML = `
+                    <div style="padding: 15px;">
+                        <p>${mensajes[contador]}</p>
+                        <button onclick="cerrarPopup(this)">OK</button>
+                    </div>
+                `;
+                
+                dialogo.appendChild(bocadillo);
+                document.body.appendChild(dialogo);
+                
+                const currentVelocidad = Math.max(100, 400 - (nerviosismo * 20));
+                clearInterval(movimientoInterval);
+                movimientoInterval = setInterval(() => {
+                    const x = Math.random() * (window.innerWidth - 300);
+                    const y = Math.random() * (window.innerHeight - 300);
+                    const escala = 0.9 + Math.random() * 0.8;
+                    
+                    killkiwi.style.left = `${x}px`;
+                    killkiwi.style.top = `${y}px`;
+                    killkiwi.style.transform = `scale(${escala})`;
+                }, currentVelocidad * 1.5);
+            }
+        }
+
+        function cerrarPopup(elemento) {
+            const dialogo = elemento.closest('.dialogo');
+            document.body.removeChild(dialogo);
+            popupAbierto = false;
+            contador++;
+            
+            if (contador < mensajes.length) {
+                rebotarPorPantalla();
+                setTimeout(mostrarPopup, 800 + (Math.random() * 800));
+            } else {
+                // Desbloquear al terminar
+                window.onbeforeunload = null;
+                document.body.style.touchAction = 'auto';
+                alert("¡Has completado todos los mensajes! El dispositivo se ha desbloqueado.");
+            }
+        }
+
+        // Iniciar todo
+        window.onload = function() {
+            // Forzar modo pantalla completa (requiere interacción del usuario)
+            document.documentElement.requestFullscreen().catch(e => console.log(e));
+            
+            killkiwi.style.left = `${Math.random() * (window.innerWidth - 300)}px`;
+            killkiwi.style.top = `${Math.random() * (window.innerHeight - 300)}px`;
+            killkiwi.style.transform = 'scale(1.2)';
+            
+            rebotarPorPantalla();
+            setTimeout(mostrarPopup, 800);
+        };
     </script>
 </body>
 </html>
