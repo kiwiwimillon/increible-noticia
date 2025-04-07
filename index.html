@@ -8,7 +8,7 @@
             margin: 0;
             overflow: hidden;
             background-color: #000;
-            font-family: Arial, sans-serif; /* Fuente más básica y legible */
+            font-family: Arial, sans-serif;
             user-select: none;
             touch-action: none;
             height: 100vh;
@@ -38,26 +38,26 @@
             display: flex;
             z-index: 1000;
             pointer-events: none;
-            padding: 10px; /* Menos espacio alrededor */
+            padding: 2px;
             box-sizing: border-box;
         }
         
         .bocadillo {
             position: relative;
             background: white;
-            padding: 15px; /* Reducido de 25px */
+            padding: 5px;
             border-radius: 12px;
-            max-width: 90%; /* Ocupa más ancho */
+            width: 98%;
             text-align: center;
             font-weight: bold;
-            font-size: 1.8rem; /* Más grande (antes 1.4rem) */
+            font-size: 3.5rem;
             color: black;
             border: 4px solid #333;
             box-shadow: 5px 5px 0 rgba(0,0,0,0.2);
             pointer-events: auto;
-            margin: 10px; /* Reducido de 20px */
+            margin: 2px;
             animation: aparecer 0.3s ease-out;
-            line-height: 1.3; /* Mejor espaciado entre líneas */
+            line-height: 1.2;
         }
         
         .bocadillo:after {
@@ -83,25 +83,14 @@
             background: #ffcc00;
             color: black;
             border: 3px solid #333;
-            padding: 12px 30px; /* Botón más grande */
+            padding: 25px 50px;
             margin-top: 15px;
             border-radius: 25px;
             font-weight: bold;
             cursor: pointer;
-            font-size: 1.3rem; /* Texto más grande */
+            font-size: 2.5rem;
             transition: all 0.2s;
             box-shadow: 3px 3px 0 #333;
-        }
-        
-        button:hover {
-            background: #ffdd33;
-            transform: scale(1.05) translateY(-2px);
-            box-shadow: 5px 5px 0 #333;
-        }
-        
-        button:active {
-            transform: scale(0.95) translateY(2px);
-            box-shadow: 1px 1px 0 #333;
         }
         
         #blocker {
@@ -110,36 +99,33 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(0,0,0,0.9);
             z-index: 9999;
             display: flex;
             justify-content: center;
             align-items: center;
             color: white;
-            font-size: 2rem;
+            font-size: 3rem;
             text-align: center;
-            display: none;
+        }
+        
+        #fullscreen-block {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            z-index: 9998;
         }
     </style>
 </head>
 <body>
-    <!-- El resto del código se mantiene igual -->
-    <div id="blocker">¡Termina todos los mensajes primero!</div>
+    <div id="fullscreen-block"></div>
+    <div id="blocker">¡Debes ver todos los mensajes para continuar!</div>
     <img id="killkiwi" src="killkiwi.png" alt="KillKiWi">
 
-   
     <script>
-        // Bloqueo total del dispositivo
-        document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-        });
-        
-        document.addEventListener('keydown', function(e) {
-            if ([37, 38, 39, 40, 32].includes(e.keyCode)) { // Flechas y espacio
-                e.preventDefault();
-            }
-        });
-        
         // Mensajes para primera visita
         const mensajesPrimeraVez = [
             "JAJAJA Eres una maruja",
@@ -189,26 +175,36 @@
         let popupAbierto = false;
         const killkiwi = document.getElementById('killkiwi');
         const blocker = document.getElementById('blocker');
-        let movimientoInterval = null;
-        let nerviosismo = 0;
+        const fullscreenBlock = document.getElementById('fullscreen-block');
 
-        // Bloquear gestos táctiles
-        document.addEventListener('touchmove', function(e) {
-            if (!e.target.classList.contains('bocadillo') && !e.target.closest('.bocadillo')) {
+        // Bloqueo total del dispositivo
+        function bloquearTodo() {
+            // Bloquear gestos táctiles
+            document.addEventListener('touchmove', function(e) {
                 e.preventDefault();
-            }
-        }, { passive: false });
-
-        // Bloquear salida
-        window.onbeforeunload = function(e) {
-            if (contador < mensajes.length) {
+            }, { passive: false });
+            
+            // Bloquear eventos del teclado
+            document.addEventListener('keydown', function(e) {
+                e.preventDefault();
+            });
+            
+            // Bloquear menú contextual
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+            });
+            
+            // Bloquear salida
+            window.onbeforeunload = function(e) {
                 e.preventDefault();
                 e.returnValue = '';
-                blocker.style.display = 'flex';
-                setTimeout(() => blocker.style.display = 'none', 2000);
                 return "¡Debes terminar todos los mensajes primero!";
-            }
-        };
+            };
+            
+            // Ocultar la barra de navegación (para algunos navegadores)
+            window.scrollTo(0, 0);
+            document.documentElement.style.overflow = 'hidden';
+        }
 
         // Posiciones posibles para los bocadillos
         const posicionesBocadillo = [
@@ -223,43 +219,21 @@
         ];
 
         function rebotarPorPantalla() {
-            clearInterval(movimientoInterval);
+            const x = Math.random() * (window.innerWidth - 300);
+            const y = Math.random() * (window.innerHeight - 300);
+            const escala = 0.9 + Math.random() * 0.8;
             
-            const velocidad = Math.max(30, 200 - (nerviosismo * 20));
-            const escalaMin = 0.8 - (nerviosismo * 0.03);
-            const escalaMax = 1.5 + (nerviosismo * 0.15);
-            
-            let posX = parseFloat(killkiwi.style.left) || window.innerWidth/2;
-            let posY = parseFloat(killkiwi.style.top) || window.innerHeight/2;
-            let velX = (Math.random() - 0.5) * (25 + nerviosismo * 6);
-            let velY = (Math.random() - 0.5) * (25 + nerviosismo * 6);
-            
-            movimientoInterval = setInterval(() => {
-                posX += velX;
-                posY += velY;
-                
-                if (posX < 0 || posX > window.innerWidth - 300) {
-                    velX *= -1;
-                    posX = Math.max(0, Math.min(posX, window.innerWidth - 300));
-                }
-                if (posY < 0 || posY > window.innerHeight - 300) {
-                    velY *= -1;
-                    posY = Math.max(0, Math.min(posY, window.innerHeight - 300));
-                }
-                
-                const escala = escalaMin + Math.random() * (escalaMax - escalaMin);
-                const rotacion = (Math.random() - 0.5) * 45;
-                
-                killkiwi.style.left = `${posX}px`;
-                killkiwi.style.top = `${posY}px`;
-                killkiwi.style.transform = `rotate(${rotacion}deg) scale(${escala})`;
-            }, velocidad);
+            killkiwi.style.left = `${x}px`;
+            killkiwi.style.top = `${y}px`;
+            killkiwi.style.transform = `scale(${escala})`;
         }
 
         function mostrarPopup() {
             if (contador < mensajes.length && !popupAbierto) {
                 popupAbierto = true;
-                nerviosismo = contador * 0.8;
+                
+                // Ocultar el bloqueador principal
+                blocker.style.display = 'none';
                 
                 const dialogo = document.createElement('div');
                 dialogo.className = 'dialogo';
@@ -271,7 +245,7 @@
                 const bocadillo = document.createElement('div');
                 bocadillo.className = 'bocadillo';
                 bocadillo.innerHTML = `
-                    <div style="padding: 15px;">
+                    <div style="padding: 5px;">
                         <p>${mensajes[contador]}</p>
                         <button onclick="cerrarPopup(this)">OK</button>
                     </div>
@@ -280,17 +254,7 @@
                 dialogo.appendChild(bocadillo);
                 document.body.appendChild(dialogo);
                 
-                const currentVelocidad = Math.max(100, 400 - (nerviosismo * 20));
-                clearInterval(movimientoInterval);
-                movimientoInterval = setInterval(() => {
-                    const x = Math.random() * (window.innerWidth - 300);
-                    const y = Math.random() * (window.innerHeight - 300);
-                    const escala = 0.9 + Math.random() * 0.8;
-                    
-                    killkiwi.style.left = `${x}px`;
-                    killkiwi.style.top = `${y}px`;
-                    killkiwi.style.transform = `scale(${escala})`;
-                }, currentVelocidad * 1.5);
+                rebotarPorPantalla();
             }
         }
 
@@ -301,27 +265,41 @@
             contador++;
             
             if (contador < mensajes.length) {
-                rebotarPorPantalla();
-                setTimeout(mostrarPopup, 800 + (Math.random() * 800));
+                setTimeout(mostrarPopup, 500);
             } else {
                 // Desbloquear al terminar
-                window.onbeforeunload = null;
-                document.body.style.touchAction = 'auto';
-                alert("¡Has completado todos los mensajes! El dispositivo se ha desbloqueado.");
+                desbloquearTodo();
             }
+        }
+
+        function desbloquearTodo() {
+            // Eliminar todos los bloqueadores
+            fullscreenBlock.style.display = 'none';
+            blocker.style.display = 'none';
+            
+            // Restaurar eventos
+            window.onbeforeunload = null;
+            document.documentElement.style.overflow = 'auto';
+            
+            // Mostrar mensaje final
+            alert("¡Has completado todos los mensajes! Ahora puedes usar tu dispositivo normalmente.");
         }
 
         // Iniciar todo
         window.onload = function() {
-            // Forzar modo pantalla completa (requiere interacción del usuario)
-            document.documentElement.requestFullscreen().catch(e => console.log(e));
+            // Activar bloqueo total
+            bloquearTodo();
             
-            killkiwi.style.left = `${Math.random() * (window.innerWidth - 300)}px`;
-            killkiwi.style.top = `${Math.random() * (window.innerHeight - 300)}px`;
-            killkiwi.style.transform = 'scale(1.2)';
+            // Intentar pantalla completa (no siempre funciona sin interacción del usuario)
+            try {
+                document.documentElement.requestFullscreen();
+            } catch (e) {}
             
+            // Posición inicial del personaje
             rebotarPorPantalla();
-            setTimeout(mostrarPopup, 800);
+            
+            // Mostrar primer mensaje
+            setTimeout(mostrarPopup, 1000);
         };
     </script>
 </body>
