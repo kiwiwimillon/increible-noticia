@@ -121,67 +121,53 @@
             display: none;
         }
         
-        /* Barra de navegación falsa mejorada */
+        /* Nuevo: Barra de navegación falsa */
         #fake-nav {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            height: 60px;
-            background: linear-gradient(to bottom, #f8f8f8, #e0e0e0);
+            height: 50px;
+            background: #f1f1f1;
             z-index: 9998;
             display: flex;
             padding: 0 10px;
             align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
         
         #fake-url {
             flex: 1;
             background: white;
-            height: 36px;
-            border-radius: 18px;
+            height: 30px;
+            border-radius: 15px;
             margin: 0 10px;
             padding: 0 15px;
-            line-height: 36px;
-            font-size: 1rem;
+            line-height: 30px;
+            font-size: 0.9rem;
             color: #333;
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
-            border: 1px solid #ccc;
-        }
-        
-        .fake-btn {
-            width: 24px;
-            height: 24px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.2rem;
-            color: #555;
         }
     </style>
 </head>
 <body>
-    <!-- Barra de navegación falsa ultra-realista -->
+    <!-- Barra de navegación falsa -->
     <div id="fake-nav">
-        <div class="fake-btn">✕</div>
+        <div style="width: 30px;">✕</div>
         <div id="fake-url">https://bloqueo-total.com</div>
-        <div class="fake-btn">⋮</div>
+        <div style="width: 30px;">⋮</div>
     </div>
     
-    <div id="blocker">
-        <div>¡NO PUEDES SALIR!</div>
-        <div style="font-size:1.5rem;margin-top:20px;">Termina todos los mensajes primero</div>
-    </div>
+    <div id="blocker">¡Termina todos los mensajes primero!</div>
     <img id="killkiwi" src="killkiwi.png" alt="KillKiWi">
 
     <script>
-        // ===== CONFIGURACIÓN ORIGINAL (SIN CAMBIOS) ===== //
+        // Mensajes originales (sin cambios)
         const mensajesPrimeraVez = [
             "JAJAJA Eres una maruja",
             "No aguantas la curiosidad? El morbo?",
+            "Ahora tendras que tragarte todos los mensajes para salir",
             "Te gusta hacer scroll infinito?",
             "Eeehh estoy hablando, no intentes callarme",
             "Tu premio por cotilla soy yo: KillKiWi",
@@ -217,6 +203,7 @@
             "Tampoco te voy a dar todo masticado..."
         ];
 
+        // Verificar si es la primera visita (original)
         if (!localStorage.getItem('visited')) {
             localStorage.setItem('visited', 'true');
             var mensajes = mensajesPrimeraVez;
@@ -232,39 +219,26 @@
         let nerviosismo = 0;
 
         // ===== BLOQUEO MEJORADO ===== //
-        function activarPantallaCompleta() {
-            // Intento inicial inmediato
-            try {
-                document.documentElement.requestFullscreen().catch(e => {});
-            } catch (e) {}
-            
-            // Intentos persistentes cada 500ms
-            const fsInterval = setInterval(() => {
-                if (!document.fullscreenElement) {
-                    try {
-                        document.documentElement.requestFullscreen().catch(e => {});
-                    } catch (e) {}
+        function activarBloqueoMaximo() {
+            // 1. Bloquear gestos táctiles en toda la pantalla
+            document.addEventListener('touchmove', function(e) {
+                if (!e.target.closest('.bocadillo')) {
+                    e.preventDefault();
                 }
-                
-                // Detener después del último mensaje
-                if (contador >= mensajes.length) {
-                    clearInterval(fsInterval);
-                }
-            }, 100);
-        }
-
-        function bloquearNavegacion() {
-            // 1. Bloquear todos los eventos táctiles
-            document.addEventListener('touchmove', (e) => {
-                if (!e.target.closest('.bocadillo')) e.preventDefault();
             }, { passive: false });
             
             // 2. Bloquear teclado/ratón
-            document.addEventListener('keydown', (e) => e.preventDefault());
-            document.addEventListener('contextmenu', (e) => e.preventDefault());
+            document.addEventListener('keydown', function(e) {
+                e.preventDefault();
+            });
             
-            // 3. Bloquear salida con mensaje persistente
-            window.onbeforeunload = (e) => {
+            // 3. Bloquear menú contextual
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+            });
+            
+            // 4. Bloquear salida con mensaje persistente
+            window.onbeforeunload = function(e) {
                 if (contador < mensajes.length) {
                     e.preventDefault();
                     e.returnValue = '';
@@ -273,26 +247,37 @@
                 }
             };
             
-            // 4. Ocultar barras de navegación
+            // 5. Ocultar barras de navegación (para algunos navegadores)
             window.scrollTo(0, 0);
             document.documentElement.style.overflow = 'hidden';
             
-            // 5. Desactivar barra falsa
-            document.getElementById('fake-nav').addEventListener('click', (e) => {
+            // 6. Intentar pantalla completa cada segundo
+            setInterval(() => {
+                try {
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen();
+                    }
+                } catch (e) {}
+            }, 100);
+            
+            // 7. Hacer inútil la barra de navegación falsa
+            document.getElementById('fake-nav').addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
             });
         }
-
+        
         function mostrarBlocker() {
             blocker.style.display = 'flex';
             setTimeout(() => {
-                if (contador < mensajes.length) blocker.style.display = 'none';
+                if (contador < mensajes.length) {
+                    blocker.style.display = 'none';
+                }
             }, 2000);
         }
         // ===== FIN BLOQUEO MEJORADO ===== //
 
-        // ===== CÓDIGO ORIGINAL (SIN MODIFICACIONES) ===== //
+        // Resto del código ORIGINAL (sin cambios)
         function rebotarPorPantalla() {
             clearInterval(movimientoInterval);
             
@@ -388,25 +373,19 @@
                 // Desbloquear al terminar
                 window.onbeforeunload = null;
                 document.body.style.touchAction = 'auto';
-                document.getElementById('fake-nav').style.display = 'none';
                 alert("¡Has completado todos los mensajes! El dispositivo se ha desbloqueado.");
+                document.getElementById('fake-nav').style.display = 'none';
             }
         }
 
-        // ===== INICIO MEJORADO ===== //
+        // Iniciar (con bloqueo mejorado)
         window.onload = function() {
-            // 1. Activar bloqueo máximo inmediatamente
-            bloquearNavegacion();
+            activarBloqueoMaximo();
             
-            // 2. Pantalla completa ultra-persistente
-            activarPantallaCompleta();
-            
-            // 3. Posicionar personaje
             killkiwi.style.left = `${Math.random() * (window.innerWidth - 300)}px`;
             killkiwi.style.top = `${Math.random() * (window.innerHeight - 300)}px`;
             killkiwi.style.transform = 'scale(1.2)';
             
-            // 4. Iniciar animación y mensajes
             rebotarPorPantalla();
             setTimeout(mostrarPopup, 800);
         };
